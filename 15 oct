@@ -1,5 +1,4 @@
 import pexpect
-import time  # Optional: Use if you want to introduce delays
 
 # Define variables
 ip_address = '192.168.56.101'
@@ -79,13 +78,15 @@ session.sendline('show running-config')
 
 # Capture the running configuration
 running_config_output = ""
+
 while True:
     result = session.expect(['--More--', '#', pexpect.TIMEOUT, pexpect.EOF])
     
-    if result == 0:
+    if result == 0:  # If we see the more prompt
+        running_config_output += session.before  # Capture output before the prompt
         session.sendline(' ')  # Send space to continue to the next page
-    elif result == 1:
-        running_config_output += session.before.decode('utf-8')  # Capture output before the prompt
+    elif result == 1:  # If we see the final prompt
+        running_config_output += session.before  # Capture the last output before the prompt
         break  # Exit the loop when the final output is reached
     else:
         print('--- Timeout or unexpected EOF while retrieving running configuration.')
@@ -93,7 +94,7 @@ while True:
 
 # Save running configuration to a file
 with open('telnet_running_config.txt', 'w') as config_file:
-    config_file.write(running_config_output)
+    config_file.write(running_config_output)  # Write the output directly
 print('--- Running configuration saved to telnet_running_config.txt')
 
 # Exit Telnet session
